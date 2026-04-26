@@ -13,9 +13,13 @@ from pathlib import Path
 
 # 1. Nạp cấu hình từ file .env (Ép ghi đè)
 load_dotenv()
+# Tự động lấy đường dẫn thư mục hiện tại
+base_dir = os.path.dirname(os.path.abspath(__file__))
+# Chỉ định thư mục templates nằm trong static
+template_dir = os.path.join(base_dir, 'static', 'templates')
 
+app = Flask(__name__, template_folder=template_dir)
 
-app = Flask(__name__, template_folder='static/templates')
 CORS(app)
 
 url = os.environ.get("SUPABASE_URL", "")

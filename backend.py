@@ -265,39 +265,43 @@ def import_stocks():
         df = pd.read_excel(file, dtype=str) if file.filename.endswith(('.xlsx', '.xls')) else pd.read_csv(file, dtype=str)
         df = df.where(pd.notnull(df), None)
 
-        # 1. Lấy bản đồ ICB để ánh xạ ID
         res_icb = supabase.table('icb_levels').select("id, icb_code").execute()
         icb_map = {str(get_val(r, 'icb_code', 'ICB_Code')).strip().zfill(4): get_val(r, 'id', 'Id') for r in res_icb.data}
 
-        prepared_data = []
+        # Dùng Dictionary để lọc trùng mã CK ngay trong file Excel
+        # Nếu trùng mã, dòng đứng sau trong Excel sẽ đè lên dòng trước
+        clean_dict = {} 
+
         for _, row in df.iterrows():
             s_code = str(row['MÃ CHỨNG KHOÁN']).strip().upper()
             raw_icb = str(row['Ma_ICB_Level4']).strip().split('.')[0].zfill(4)
             icb_id = icb_map.get(raw_icb)
             
-            if icb_id and s_code:
-                prepared_data.append({
+            if s_code and icb_id:
+                # Gán vào dict với key là mã CK. Nếu mã đã tồn tại, nó sẽ tự ghi đè giá trị mới nhất.
+                clean_dict[s_code] = {
                     "stockcode": s_code,
                     "companyname": str(row['TÊN CÔNG TY']).strip(),
                     "exchange": str(row['Sàn giao dịch']).strip(),
                     "icb_level_id": icb_id,
                     "status": "Active",
-                    "updateddate": "now()" # Đánh dấu thời điểm cập nhật
-                })
+                    "updateddate": "now()"
+                }
+
+        # Chuyển dict ngược lại thành list để gửi đi
+        prepared_data = list(clean_dict.values())
 
         if prepared_data:
-            # SỬ DỤNG UPSERT: Nếu trùng 'stockcode', Supabase sẽ tự Update thay vì báo lỗi
-            # 'on_conflict' chỉ định cột dùng để kiểm tra trùng lặp
+            # Bây giờ prepared_data chắc chắn không có mã nào bị lặp lại 2 lần
             supabase.table('stocks').upsert(prepared_data, on_conflict="stockcode").execute()
 
-        return jsonify({"message": f"Xử lý thành công {len(prepared_data)} mã chứng khoán."}), 200
+        return jsonify({
+            "message": f"Xử lý thành công {len(prepared_data)} mã chứng khoán.",
+            "note": "Các mã trùng lặp trong file đã được tự động gộp."
+        }), 200
 
     except Exception as e:
-        # Trả về thông báo lỗi chi tiết cho Frontend hiển thị lên thanh Progress đỏ
-        error_msg = str(e)
-        if "duplicate key" in error_msg:
-            error_msg = "Lỗi: Phát hiện mã chứng khoán trùng lặp không thể xử lý."
-        return jsonify({"error": error_msg}), 500
+        return jsonify({"error": str(e)}), 500
 
 # =========================================================
 # 7. CÁC API KHÁC (GET, ADD, UPDATE, DELETE) - GIỮ NGUYÊN

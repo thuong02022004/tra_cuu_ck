@@ -1,5 +1,6 @@
 let currentEditId = null;
-const BASE_URL = 'http://127.0.0.1:5000'; // Flask đóng vai trò trung gian gọi Supabase
+// SỬA TẠI ĐÂY: Để trống để tự động nhận diện domain hiện tại (Local hoặc Render)
+const BASE_URL = ''; 
 
 // --- HÀM TOÀN CỤC ---
 function confirmDelete(id, code) {
@@ -193,7 +194,6 @@ async function loadTable() {
         const res = await fetch(`${BASE_URL}/api/get-icb`);
         globalIcbData = await res.json();
         
-        // Giả sử Thượng có script pagination riêng, nếu không nó sẽ chạy render mặc định
         if (window.initPagination) {
             initPagination(globalIcbData, renderIcbRows);
         } else {

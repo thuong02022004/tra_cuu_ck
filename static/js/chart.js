@@ -25,7 +25,8 @@ async function renderLevelStatistics(level) {
     try {
         // 1. Gọi API thống kê truy xuất ngược (Recursive) đã viết ở Backend
         // API này trả về cấu trúc: { "Tên ngành": { "total": X, "exchanges": { "HOSE": Y, ... } } }
-        const res = await fetch(`http://127.0.0.1:5000/api/stats/level/${level}`);
+        // SỬA TẠI ĐÂY: Thay http://127.0.0.1:5000 bằng đường dẫn tương đối /api
+        const res = await fetch(`/api/stats/level/${level}`);
         const data = await res.json();
 
         // 2. Chuẩn bị dữ liệu cho Biểu đồ Ngành (Bên trái)

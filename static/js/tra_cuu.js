@@ -19,24 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Nút Áp dụng lọc kết hợp
-    document.getElementById('btn-apply-lookup').addEventListener('click', () => {
-        menuFilter.classList.add('hidden');
-        executeCombinedFilter();
-    });
+    const btnApply = document.getElementById('btn-apply-lookup');
+    if (btnApply) {
+        btnApply.addEventListener('click', () => {
+            menuFilter.classList.add('hidden');
+            executeCombinedFilter();
+        });
+    }
 
     // Nút Đặt lại
-    document.getElementById('btn-reset-filters').addEventListener('click', () => {
-        document.getElementById('filter-exchange').value = 'all';
-        document.getElementById('filter-user-group').value = 'all';
-        document.getElementById('filter-level-icb').value = 'l4';
-        document.getElementById('global-search').value = '';
-        executeCombinedFilter();
-    });
+    const btnReset = document.getElementById('btn-reset-filters');
+    if (btnReset) {
+        btnReset.addEventListener('click', () => {
+            document.getElementById('filter-exchange').value = 'all';
+            document.getElementById('filter-user-group').value = 'all';
+            document.getElementById('filter-level-icb').value = 'l4';
+            document.getElementById('global-search').value = '';
+            executeCombinedFilter();
+        });
+    }
 });
 
+/**
+ * Lấy dữ liệu tra cứu tổng hợp
+ */
 async function fetchInitialData() {
     try {
-        // Sử dụng BASE_URL tương đối để tương thích môi trường Production (Render)
         const res = await fetch(`${BASE_URL}/api/lookup-stocks`);
         allLookupData = await res.json();
         
@@ -50,12 +58,17 @@ async function fetchInitialData() {
     }
 }
 
+/**
+ * Đổ dữ liệu vào các ô lọc (Sàn, Nhóm)
+ */
 function populateDropdowns() {
     const exchangeSelect = document.getElementById('filter-exchange');
     const groupSelect = document.getElementById('filter-user-group');
+    if (!exchangeSelect || !groupSelect) return;
 
     // Lấy danh sách sàn duy nhất
     const exchanges = [...new Set(allLookupData.map(item => item.exchange))];
+    exchangeSelect.innerHTML = '<option value="all">Tất cả sàn</option>';
     exchanges.sort().forEach(ex => {
         if(ex) exchangeSelect.insertAdjacentHTML('beforeend', `<option value="${ex}">${ex}</option>`);
     });
@@ -67,29 +80,39 @@ function populateDropdowns() {
             item.user_groups.split(', ').forEach(g => groupSet.add(g));
         }
     });
+    groupSelect.innerHTML = '<option value="all">Tất cả nhóm</option>';
     [...groupSet].sort().forEach(g => {
         groupSelect.insertAdjacentHTML('beforeend', `<option value="${g}">${g}</option>`);
     });
 }
 
+/**
+ * Logic lọc kết hợp
+ */
 function executeCombinedFilter() {
     const exchangeFilter = document.getElementById('filter-exchange').value;
     const userGroupFilter = document.getElementById('filter-user-group').value;
     const searchTerm = document.getElementById('global-search').value.toLowerCase().trim();
 
-    // LOGIC LỌC KẾT HỢP
     const filtered = allLookupData.filter(item => {
         const matchExchange = (exchangeFilter === 'all' || item.exchange === exchangeFilter);
-        const matchUserGroup = (userGroupFilter === 'all' || item.user_groups.includes(userGroupFilter));
+        const matchUserGroup = (userGroupFilter === 'all' || (item.user_groups && item.user_groups.includes(userGroupFilter)));
         const matchSearch = (item.stock_code.toLowerCase().includes(searchTerm) || 
                              item.company_name.toLowerCase().includes(searchTerm));
 
         return matchExchange && matchUserGroup && matchSearch;
     });
 
-    initPagination(filtered, renderLookupRows);
+    if (typeof initPagination === 'function') {
+        initPagination(filtered, renderLookupRows);
+    } else {
+        renderLookupRows(filtered);
+    }
 }
 
+/**
+ * Hàm vẽ bảng dữ liệu kèm nút XOÁ GỠ MÃ (Dành cho việc sửa lỗi gán nhầm)
+ */
 function renderLookupRows(displayData) {
     const tbody = document.getElementById('lookup-table-body');
     const levelMode = document.getElementById('filter-level-icb').value;
@@ -97,24 +120,32 @@ function renderLookupRows(displayData) {
 
     tbody.innerHTML = '';
     displayData.forEach(item => {
-        // Badge cho Nhóm
+        // Tạo Badge cho Nhóm kèm nút gỡ mã (x)
         let groupBadges = '<span class="text-gray-300 italic text-[10px]">Chưa gán</span>';
+        
         if (item.user_groups && item.user_groups !== 'Chưa phân nhóm') {
             const groups = item.user_groups.split(', ');
-            groupBadges = groups.map(g => 
-                `<span class="inline-block px-2 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px] font-bold border border-purple-100 mr-1 mb-1">${g}</span>`
-            ).join('');
+            groupBadges = groups.map(g => `
+                <span class="inline-flex items-center px-2 py-0.5 bg-purple-50 text-purple-600 rounded text-[10px] font-bold border border-purple-100 mr-1 mb-1 shadow-sm">
+                    ${g}
+                    <button onclick="handleUnassign('${item.stock_code}', '${g}')" 
+                            class="ml-1.5 text-purple-400 hover:text-red-500 transition-colors" 
+                            title="Gỡ mã ${item.stock_code} khỏi nhóm ${g}">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </span>
+            `).join('');
         }
 
         const row = `
-            <tr class="hover:bg-blue-50/50 transition-colors">
-                <td class="px-6 py-4 font-mono font-bold text-navy uppercase">${item.stock_code}</td>
-                <td class="px-6 py-4 font-semibold text-gray-800">${item.company_name}</td>
+            <tr class="hover:bg-blue-50/50 transition-colors border-b border-gray-50">
+                <td class="px-6 py-4 font-mono font-bold text-navy uppercase text-sm">${item.stock_code}</td>
+                <td class="px-6 py-4 font-semibold text-gray-800 text-sm">${item.company_name}</td>
                 <td class="px-6 py-4 text-center">
-                    <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] font-bold border">${item.exchange}</span>
+                    <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] font-bold border uppercase">${item.exchange}</span>
                 </td>
                 <td class="px-6 py-4">
-                    <div class="text-xs text-blue-600 font-medium">${item[levelMode.toUpperCase()] || item.l4}</div>
+                    <div class="text-xs text-blue-600 font-medium">${item[levelMode.toLowerCase()] || item.l4}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-normal">${groupBadges}</td>
             </tr>`;
@@ -123,7 +154,36 @@ function renderLookupRows(displayData) {
 
     const info = document.getElementById('pagination-info');
     if (info && typeof paginationState !== 'undefined') {
-        info.innerHTML = `Tìm thấy ${paginationState.allData.length} kết quả`;
+        info.innerHTML = `Tìm thấy <span class="text-navy font-bold">${paginationState.allData.length}</span> kết quả`;
+    }
+}
+
+/**
+ * HÀM XỬ LÝ GỠ MÃ (Dùng khi bấm nút x trên Badge nhóm)
+ */
+async function handleUnassign(stockCode, groupName) {
+    if (!confirm(`Thượng có chắc muốn gỡ ${stockCode} khỏi nhóm "${groupName}" không?`)) return;
+
+    try {
+        const res = await fetch(`${BASE_URL}/api/unassign-by-name`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                stock_code: stockCode,
+                group_name: groupName
+            })
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+            alert(result.message);
+            // Tải lại dữ liệu sau khi gỡ thành công
+            fetchInitialData(); 
+        } else {
+            alert("Lỗi: " + result.error);
+        }
+    } catch (err) {
+        alert("Lỗi kết nối server!");
     }
 }
 

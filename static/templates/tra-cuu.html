@@ -16,6 +16,23 @@
         /* Hiệu ứng mượt cho dropdown */
         .animate-fade-in { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom style cho nhãn nhóm có thể xoá */
+        .group-tag {
+            transition: all 0.2s ease;
+        }
+        .group-tag:hover {
+            border-color: #f87171; /* red-400 */
+            background-color: #fef2f2; /* red-50 */
+        }
+        .btn-remove-tag {
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .group-tag:hover .btn-remove-tag {
+            opacity: 1;
+            color: #ef4444; /* red-500 */
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex h-screen overflow-hidden">
@@ -23,7 +40,7 @@
     <aside class="w-64 bg-navy text-white flex flex-col shadow-lg hidden md:flex z-20">
         <div class="h-16 flex items-center justify-center border-b border-blue-800">
             <i class="fa-solid fa-magnifying-glass-chart text-2xl mr-2"></i>
-            <h1 class="text-xl font-bold tracking-wider">ICB LOOKUP</h1>
+            <h1 class="text-xl font-bold tracking-wider uppercase">ICB LOOKUP</h1>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto font-medium text-sm">
             <a href="index.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-house w-6"></i> Trang chủ</a>
@@ -31,74 +48,75 @@
             <a href="quan-ly-ck.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-building w-6"></i> Quản lý mã chứng khoán</a>
             <a href="nhom-nganh.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-users w-6"></i> Nhóm ngành</a>
             <a href="nhomcongty.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-folder-tree w-6"></i> Nhóm công ty</a>
+            <a href="icb.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-layer-group w-6"></i> Quản lý danh mục ICB</a>
         </nav>
     </aside>
 
     <div class="flex-1 flex flex-col h-screen overflow-hidden">
         <header class="h-16 bg-white shadow flex items-center justify-between px-6 z-10">
             <div class="flex items-center text-gray-500 font-medium text-sm">
-                <span>Hệ thống</span> <i class="fa-solid fa-chevron-right text-[10px] mx-2"></i> <span class="text-navy font-bold">Tra cứu thông tin cổ phiếu</span>
+                <span>Hệ thống</span> <i class="fa-solid fa-chevron-right text-[10px] mx-2"></i> <span class="text-navy font-bold italic underline decoration-blue-200">Tra cứu & Hiệu chỉnh nhãn</span>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 border-l pl-4 border-gray-100">
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=1e3a8a&color=fff" class="w-8 h-8 rounded-full border">
                 <span class="text-sm font-semibold hidden md:block text-navy">Admin User</span>
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-6">
+        <main class="flex-1 overflow-y-auto p-4 md:p-6">
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-center relative">
                 <div class="relative flex-1 w-full">
                     <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
                     <input type="text" id="global-search" onkeyup="filterLookupTable()" 
-                           placeholder="Tìm nhanh mã CK hoặc tên công ty..." 
+                           placeholder="Nhập mã chứng khoán hoặc tên doanh nghiệp..." 
                            class="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-navy focus:ring-1 focus:ring-navy transition text-sm">
                 </div>
 
                 <div class="relative">
-                    <button id="btn-toggle-filter" class="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-sm text-sm font-medium text-gray-600">
-                        <i class="fa-solid fa-filter text-navy"></i>
-                        <span>Bộ lọc kết hợp</span>
+                    <button id="btn-toggle-filter" class="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-sm text-sm font-bold text-gray-700">
+                        <i class="fa-solid fa-sliders text-navy"></i>
+                        <span>Bộ lọc nâng cao</span>
                     </button>
 
-                    <div id="filter-menu" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-50 animate-fade-in">
+                    <div id="filter-menu" class="hidden absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-50 animate-fade-in">
                         <div class="space-y-5">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Hiển thị ICB</label>
-                                <select id="filter-level-icb" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-navy bg-gray-50">
-                                    <option value="l4">Cấp 4 (Mặc định)</option>
-                                    <option value="l3">Cấp 3</option>
-                                    <option value="l2">Cấp 2</option>
-                                    <option value="l1">Cấp 1</option>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Cấp độ ngành ICB</label>
+                                <select id="filter-level-icb" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-navy bg-gray-50 cursor-pointer">
+                                    <option value="l4">Cấp 4 (Phân ngành)</option>
+                                    <option value="l3">Cấp 3 (Ngành phụ)</option>
+                                    <option value="l2">Cấp 2 (Ngành chính)</option>
+                                    <option value="l1">Cấp 1 (Lĩnh vực)</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Sàn giao dịch</label>
-                                <select id="filter-exchange" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-navy bg-gray-50">
-                                    <option value="all">Tất cả các sàn</option>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Sàn giao dịch niêm yết</label>
+                                <select id="filter-exchange" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-navy bg-gray-50 cursor-pointer">
+                                    <option value="all">Tất cả sàn niêm yết</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Nhóm định nghĩa</label>
-                                <select id="filter-user-group" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-navy bg-gray-50">
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Nhóm danh mục tự chọn</label>
+                                <select id="filter-user-group" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-navy bg-gray-50 cursor-pointer">
                                     <option value="all">Tất cả các nhóm</option>
                                     <option value="Chưa phân nhóm">Chưa phân nhóm</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Số dòng</label>
-                                <select id="rows-per-page" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-navy bg-gray-50">
-                                    <option value="10">10 dòng</option>
-                                    <option value="20">20 dòng</option>
-                                    <option value="50">50 dòng</option>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-widest">Hiển thị tối đa</label>
+                                <select id="rows-per-page" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-navy bg-gray-50 cursor-pointer">
+                                    <option value="10">10 dòng dữ liệu</option>
+                                    <option value="20">20 dòng dữ liệu</option>
+                                    <option value="50">50 dòng dữ liệu</option>
                                 </select>
                             </div>
 
-                            <div class="pt-2">
-                                <button id="btn-apply-lookup" class="w-full bg-navy text-white py-2.5 rounded-xl text-sm font-bold shadow-lg hover:bg-blue-900 transition mb-2">Áp dụng ngay</button>
-                                <button id="btn-reset-filters" class="w-full text-gray-400 py-1 text-xs font-medium hover:text-navy transition">Đặt lại tất cả</button>
+                            <div class="pt-4 border-t border-gray-50">
+                                <button id="btn-apply-lookup" class="w-full bg-navy text-white py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-900 transition mb-2">Áp dụng bộ lọc</button>
+                                <button id="btn-reset-filters" class="w-full text-gray-400 py-1 text-xs font-semibold hover:text-red-500 transition">Thiết lập lại từ đầu</button>
                             </div>
                         </div>
                     </div>
@@ -106,26 +124,34 @@
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto min-h-[400px]">
                     <table class="w-full text-left border-collapse table-nowrap">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-500 text-[11px] uppercase font-bold tracking-widest">
+                            <tr class="bg-gray-50 text-gray-400 text-[10px] uppercase font-black tracking-widest">
                                 <th class="px-6 py-4 border-b w-32">Mã CK</th>
-                                <th class="px-6 py-4 border-b">Doanh nghiệp</th>
+                                <th class="px-6 py-4 border-b">Doanh nghiệp niêm yết</th>
                                 <th class="px-6 py-4 border-b w-24 text-center">Sàn</th>
-                                <th class="px-6 py-4 border-b">Ngành ICB</th>
-                                <th class="px-6 py-4 border-b">Nhóm định nghĩa</th>
+                                <th class="px-6 py-4 border-b">Ngành ICB chuẩn</th>
+                                <th class="px-6 py-4 border-b">Nhóm tự định nghĩa (Xoá nhãn tại đây)</th>
                             </tr>
                         </thead>
-                        <tbody id="lookup-table-body" class="text-sm text-gray-700 divide-y divide-gray-100"></tbody>
+                        <tbody id="lookup-table-body" class="text-sm text-gray-700 divide-y divide-gray-50">
+                            </tbody>
                     </table>
                 </div>
 
-                <div class="px-6 py-4 bg-gray-50 flex items-center justify-between border-t border-gray-100">
-                    <div id="pagination-info" class="text-xs text-gray-400 italic font-medium">Đang chuẩn bị dữ liệu...</div>
-                    <div id="pagination-controls"></div>
+                <div class="px-6 py-4 bg-gray-50 flex flex-col sm:flex-row items-center justify-between border-t border-gray-100 gap-4">
+                    <div id="pagination-info" class="text-xs text-gray-500 font-bold bg-white px-3 py-1.5 rounded-full border border-gray-200">
+                        Đang nạp dữ liệu từ hệ thống...
+                    </div>
+                    <div id="pagination-controls" class="flex gap-2"></div>
                 </div>
             </div>
+            
+            <p class="mt-4 text-[11px] text-gray-400 flex items-center gap-2 px-2">
+                <i class="fa-solid fa-circle-info text-blue-400"></i>
+                Mẹo: Nhấn vào dấu <i class="fa-solid fa-circle-xmark text-red-300"></i> trên các nhãn màu tím để gỡ mã chứng khoán khỏi nhóm đó nếu gán nhầm.
+            </p>
         </main>
     </div>
 

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Nhóm công ty - ICB Vietnam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/static/js/main.js"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { navy: '#1e3a8a' } } } }
+    </script>
+</head>
+<body class="bg-gray-100 text-gray-800 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-navy text-white flex flex-col shadow-lg hidden md:flex z-20">
+        <div class="h-16 flex items-center justify-center border-b border-blue-800">
+            <i class="fa-solid fa-chart-pie text-2xl mr-2"></i>
+            <h1 class="text-xl font-bold tracking-wider">ICB VIETNAM</h1>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto font-medium text-sm">
+            <a href="index.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-house w-6"></i> Trang chủ</a>
+            <a href="quan-ly-ck.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-building w-6"></i> Quản lý mã chứng khoán</a>
+            <a href="nhom-nganh.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-users w-6"></i> Nhóm ngành</a>
+            <a href="nhomcongty.html" class="flex items-center px-4 py-3 bg-blue-800 rounded-lg shadow-inner"><i class="fa-solid fa-folder-tree w-6"></i> Nhóm công ty</a>
+            <a href="icb.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-layer-group w-6"></i> Quản lý danh mục ICB</a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-16 bg-white shadow flex items-center justify-between px-6 z-10">
+            <div class="flex items-center text-gray-500 font-medium text-sm">
+                <span>Hệ thống</span> <i class="fa-solid fa-chevron-right text-[10px] mx-2"></i> <span class="text-navy font-bold">Nhóm công ty tự định nghĩa</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=1e3a8a&color=fff" class="w-8 h-8 rounded-full border">
+                <span class="text-sm font-semibold hidden md:block text-navy">Admin User</span>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Nhóm Cổ Phiếu Định Nghĩa</h2>
+                    <p class="text-sm text-gray-500">Quản lý các danh mục đầu tư theo tiêu chí riêng</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="openAssignStockModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold transition flex items-center shadow-lg shadow-emerald-100">
+                        <i class="fa-solid fa-list-check mr-2"></i> Chọn mã chứng khoán
+                    </button>
+                    <button onclick="openGroupModal()" class="bg-navy hover:bg-blue-900 text-white px-5 py-2.5 rounded-lg font-bold transition flex items-center shadow-lg shadow-blue-100">
+                        <i class="fa-solid fa-plus-circle mr-2"></i> Tạo nhóm mới
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-bold tracking-wider">
+                                <th class="px-6 py-4 border-b w-40">Mã Nhóm</th>
+                                <th class="px-6 py-4 border-b">Tên Nhóm</th>
+                                <th class="px-6 py-4 border-b">Mô tả chi tiết</th>
+                                <th class="px-6 py-4 border-b w-32 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="group-table-body" class="text-sm text-gray-700 divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 flex items-center justify-between border-t border-gray-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 font-medium">Hiển thị</span>
+                        <select id="rows-per-page" class="border border-gray-300 rounded px-2 py-1 text-xs outline-none focus:border-navy bg-white shadow-sm">
+                            <option value="10">10 dòng</option>
+                            <option value="20">20 dòng</option>
+                            <option value="50">50 dòng</option>
+                        </select>
+                    </div>
+                    <div id="pagination-controls"></div>
+                    <div id="pagination-info" class="text-xs text-gray-400 italic font-medium"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-group" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative">
+            <h3 id="modal-title" class="text-xl font-bold text-navy mb-6">Thêm Nhóm Cổ Phiếu</h3>
+            <form id="form-stock-group" class="space-y-4">
+                <input type="hidden" id="group-id">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mã Nhóm (Code)</label>
+                    <input type="text" id="group-code" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none font-mono uppercase" placeholder="VD: BLUECHIP">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tên Nhóm <span class="text-red-500">*</span></label>
+                    <input type="text" id="group-name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none" placeholder="VD: Nhóm cổ phiếu VN30">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mô tả chi tiết</label>
+                    <textarea id="group-desc" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none" placeholder="Ghi chú về tiêu chí của nhóm..."></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button type="button" onclick="closeGroupModal()" class="px-6 py-2 text-gray-500 font-medium hover:bg-gray-100 rounded-lg">Hủy</button>
+                    <button type="submit" class="px-6 py-2 bg-navy text-white rounded-lg font-bold hover:bg-blue-900 transition shadow-lg">Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-assign-stock" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60] backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative">
+            <h3 class="text-xl font-bold text-navy mb-4 flex items-center">
+                <i class="fa-solid fa-link mr-2"></i> Gán Cổ Phiếu Vào Nhóm
+            </h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">1. Chọn nhóm mục tiêu</label>
+                    <select id="assign-group-id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none bg-gray-50"></select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">2. Chọn các mã cổ phiếu</label>
+                    <div class="relative mb-2">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                        <input type="text" id="search-stock-assign" onkeyup="filterStockList()" placeholder="Tìm nhanh mã hoặc tên công ty..." class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-navy outline-none">
+                    </div>
+                    <div id="stock-list-container" class="h-60 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50 grid grid-cols-2 gap-1 content-start">
+                        <div class="col-span-2 text-center py-10 text-gray-400">Đang tải danh sách cổ phiếu...</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ghi chú gán (Không bắt buộc)</label>
+                    <input type="text" id="assign-note" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none" placeholder="VD: Thêm vào danh mục theo dõi Q2/2026">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button type="button" onclick="closeAssignStockModal()" class="px-6 py-2 text-gray-500 font-medium hover:bg-gray-100 rounded-lg">Đóng</button>
+                <button type="button" onclick="saveStockAssignment()" class="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 shadow-lg transition">
+                    Xác nhận gán mã
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/group_management.js"></script>
+</body>
+</html>

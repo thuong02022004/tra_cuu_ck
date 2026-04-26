@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Danh mục ICB - ICB Vietnam</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/static/js/main.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { colors: { navy: '#1e3a8a', } }
+            }
+        }
+    </script>
+    <style>
+        .toggle-btn { cursor: pointer; transition: transform 0.2s; }
+        .toggle-btn:hover { transform: scale(1.1); }
+        #file-import { display: none; }
+        .progress-bar-fill { transition: width 0.4s ease-in-out; }
+
+        /* Đảm bảo nội dung không bị xuống dòng */
+        .table-nowrap th, .table-nowrap td {
+            white-space: nowrap;
+        }
+
+        /* Tối ưu badge cấp để luôn nằm trên 1 hàng */
+        .badge-level {
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-navy text-white flex flex-col shadow-lg hidden md:flex z-20">
+        <div class="h-16 flex items-center justify-center border-b border-blue-800">
+            <i class="fa-solid fa-chart-pie text-2xl mr-2"></i>
+            <h1 class="text-xl font-bold tracking-wider">ICB VIETNAM</h1>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto font-medium text-sm">
+            <a href="index.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition">
+                <i class="fa-solid fa-house w-6"></i> Trang chủ
+            </a>
+            <a href="quan-ly-ck.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition">
+                <i class="fa-solid fa-building w-6"></i> Quản lý mã chứng khoán
+            </a>
+            <a href="icb.html" class="flex items-center px-4 py-3 bg-blue-800 rounded-lg shadow-inner">
+                <i class="fa-solid fa-layer-group w-6"></i> Quản lý danh mục ICB
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition">
+                <i class="fa-solid fa-chart-simple w-6"></i> Thống kê báo cáo
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+
+        <header class="h-16 bg-white shadow flex items-center justify-between px-6 z-10">
+            <div class="flex items-center text-gray-500 font-medium text-sm">
+                <span class="mr-2">Hệ thống</span>
+                <i class="fa-solid fa-chevron-right text-[10px] mr-2"></i>
+                <span class="text-navy font-bold">Danh mục ICB</span>
+            </div>
+
+            <div class="flex items-center space-x-5">
+                <div class="flex items-center gap-2 border-l pl-5 border-gray-300">
+                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=1e3a8a&color=fff" alt="Avatar" class="w-8 h-8 rounded-full">
+                    <span class="text-sm font-semibold hidden md:block">Admin User</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6">
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold text-gray-800">Cấu trúc Ngành ICB</h2>
+
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <select id="filter-level" class="border border-gray-300 rounded-lg px-3 py-2 focus:border-navy text-sm outline-none">
+                        <option value="">-- Tất cả các cấp --</option>
+                        <option value="1">Cấp 1</option>
+                        <option value="2">Cấp 2</option>
+                        <option value="3">Cấp 3</option>
+                        <option value="4">Cấp 4</option>
+                    </select>
+
+                    <div class="flex gap-2">
+                        <input type="file" id="file-import" accept=".csv, .xlsx, .xls" onchange="handleImport()">
+                        <button onclick="document.getElementById('file-import').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center text-sm shadow-sm">
+                            <i class="fa-solid fa-file-import mr-2"></i> Import
+                        </button>
+
+                        <button id="btn-open-form" class="bg-navy hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-medium transition flex items-center text-sm shadow-sm">
+                            <i class="fa-solid fa-plus mr-2"></i> Thêm mới
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse table-nowrap">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-bold tracking-wider">
+                                <th class="px-6 py-4 border-b w-16">ID</th>
+                                <th class="px-6 py-4 border-b w-24">Mã ICB</th>
+                                <th class="px-6 py-4 border-b w-28 text-center">Cấp bậc</th>
+                                <th class="px-6 py-4 border-b">Tên Ngành (VN)</th>
+                                <th class="px-6 py-4 border-b hidden lg:table-cell">Ngành (EN)</th>
+                                <th class="px-6 py-4 border-b text-center w-24">Cấp Cha</th>
+                                <th class="px-6 py-4 border-b text-center w-28">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="icb-table-body" class="text-sm text-gray-700 divide-y divide-gray-100">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-6 py-4 bg-gray-50 flex items-center justify-between border-t">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 font-medium">Hiển thị</span>
+                        <select id="rows-per-page" class="border border-gray-300 rounded px-2 py-1 text-xs outline-none focus:border-navy bg-white">
+                            <option value="10">10 dòng</option>
+                            <option value="20">20 dòng</option>
+                            <option value="50">50 dòng</option>
+                        </select>
+                    </div>
+                    <div id="pagination-controls"></div>
+                    
+                    <div id="pagination-info">
+                        <span class="text-xs text-gray-500 italic font-medium">Đang tải...</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="modal-form-icb" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm transition-all">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative transform transition-all scale-100">
+            <button id="btn-close-form" class="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <h2 id="modal-form-title" class="text-xl font-bold text-navy mb-6 flex items-center">
+                <i class="fa-solid fa-layer-group mr-3"></i>Thêm Danh Mục ICB
+            </h2>
+
+            <form id="form-icb" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cấp ICB <span class="text-red-500">*</span></label>
+                        <select id="icb-level" required class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:border-navy outline-none bg-white">
+                            <option value="">-- Chọn cấp --</option>
+                            <option value="1">Cấp 1 (Ngành chính)</option>
+                            <option value="2">Cấp 2</option>
+                            <option value="3">Cấp 3</option>
+                            <option value="4">Cấp 4 (Chi tiết)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mã ICB <span class="text-red-500">*</span></label>
+                        <input type="text" id="icb-code" required placeholder="VD: 8300" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:border-navy outline-none font-mono">
+                    </div>
+                </div>
+
+                <div id="wrapper-parent" class="hidden animate-fade-in">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ngành Cấp Cha Trực Tiếp <span class="text-red-500">*</span></label>
+                    <select id="icb-parent" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:border-navy outline-none bg-gray-50">
+                        <option value="">-- Chọn ngành trực thuộc --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tên ngành (Tiếng Việt) <span class="text-red-500">*</span></label>
+                    <input type="text" id="icb-name-vi" required placeholder="VD: Ngân hàng" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:border-navy outline-none">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Tên ngành (English)</label>
+                        <span class="text-[10px] text-blue-500 font-bold uppercase"><i class="fa-solid fa-language mr-1"></i>Tự động dịch</span>
+                    </div>
+                    <input type="text" id="icb-name-en" placeholder="VD: Banks" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:border-navy outline-none bg-gray-50">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mô tả thêm</label>
+                    <textarea id="icb-desc" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:border-navy outline-none"></textarea>
+                </div>
+
+                <div class="pt-4 border-t flex justify-end gap-3">
+                    <button type="button" id="btn-cancel-form" class="px-5 py-2.5 text-gray-500 font-medium hover:bg-gray-100 rounded-lg transition text-sm">Hủy bỏ</button>
+                    <button type="submit" class="px-6 py-2.5 bg-navy text-white rounded-lg font-bold shadow-lg shadow-blue-100 hover:bg-blue-900 transition text-sm">
+                        Lưu thông tin
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-delete" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center transform transition-all">
+            <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Xác nhận xóa?</h2>
+            <p class="text-gray-500 text-sm mb-6">Mã ICB <strong id="delete-target-code" class="text-gray-800"></strong> sẽ bị xóa vĩnh viễn. Bạn có chắc chắn?</p>
+            <div class="flex gap-3">
+                <button type="button" id="btn-cancel-delete" class="flex-1 py-2.5 border border-gray-300 rounded-xl text-gray-600 font-bold hover:bg-gray-50 transition text-sm">Quay lại</button>
+                <button type="button" id="btn-confirm-delete" class="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 shadow-lg shadow-red-100 transition text-sm">Xóa ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-progress" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60] backdrop-blur-md">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+            <div id="progress-status-icon" class="mb-4">
+                <i class="fa-solid fa-circle-notch fa-spin text-5xl text-emerald-500"></i>
+            </div>
+            <h3 id="progress-title" class="text-xl font-bold text-gray-800 mb-2">Đang xử lý dữ liệu...</h3>
+            <div class="w-full bg-gray-100 rounded-full h-3 mb-2 overflow-hidden border border-gray-200">
+                <div id="progress-bar" class="bg-emerald-500 h-full w-0 progress-bar-fill shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+            </div>
+            <div class="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">
+                <span id="progress-percent">0%</span>
+                <span id="progress-count">Chuẩn bị...</span>
+            </div>
+            <button id="btn-close-progress" onclick="location.reload()" class="hidden w-full py-3 bg-navy text-white rounded-xl font-bold hover:bg-blue-900 shadow-lg transition">HOÀN TẤT & ĐÓNG</button>
+        </div>
+    </div>
+
+    <script src="/static/js/icb.js"></script>
+</body>
+
+</html>

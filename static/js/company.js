@@ -1,5 +1,6 @@
 let currentEditId = null;
-const BASE_URL = 'http://127.0.0.1:5000';
+// SỬA TẠI ĐÂY: Sử dụng chuỗi rỗng để tự động nhận diện domain của Render
+const BASE_URL = ''; 
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Tải dữ liệu ban đầu và danh sách sàn vào dropdown lọc

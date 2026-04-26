@@ -3,28 +3,40 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import pandas as pd
-from tqdm import tqdm
-from pathlib import Path
 
 # =========================================================
 # KHỞI TẠO HỆ THỐNG & KẾT NỐI DATABASE
 # =========================================================
 
-# 1. Nạp cấu hình từ file .env (Ép ghi đè)
+# 1. Nạp cấu hình (Chỉ dùng cho máy Local, trên Render nó sẽ tự bỏ qua)
 load_dotenv()
-# Tự động lấy đường dẫn thư mục hiện tại
+
+# 2. Cấu hình đường dẫn thư mục chuẩn
 base_dir = os.path.dirname(os.path.abspath(__file__))
-# Chỉ định thư mục templates nằm trong static
+# Ép Flask tìm templates trong static/templates
 template_dir = os.path.join(base_dir, 'static', 'templates')
 
 app = Flask(__name__, template_folder=template_dir)
-
 CORS(app)
 
-url = os.environ.get("SUPABASE_URL", "")
-key = os.environ.get("SUPABASE_KEY", "")
-supabase = None
+# 3. Kết nối Supabase (Lấy từ Environment Variables của Render hoặc file .env)
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+# Kiểm tra kết nối để tránh lỗi 500 không rõ nguyên nhân
+if not SUPABASE_URL or not SUPABASE_KEY:
+    print("❌ LỖI: Thiếu cấu hình SUPABASE_URL hoặc SUPABASE_KEY!")
+    supabase = None
+else:
+    try:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✅ Đã kết nối Supabase thành công!")
+    except Exception as e:
+        print(f"❌ Lỗi khi khởi tạo Supabase Client: {e}")
+        supabase = None
+
+# Kiểm tra file .env để Thượng dễ debug trong Logs của Render
+print(f"🔍 Trạng thái URL: {'Đã nhận' if SUPABASE_URL else 'Trống'}")
 
 
 def check_db():

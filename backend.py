@@ -330,5 +330,35 @@ def get_level_stats(target_level):
         return jsonify(stats), 200
     except Exception as e: return jsonify({"error": str(e)}), 500
 
+# API này dành riêng cho trang Phân loại Nhóm ngành (L1 -> L4)
+@app.route('/api/get-stocks-with-hierarchy', methods=['GET'])
+def api_stocks_hierarchy():
+    err = check_db()
+    if err: return err
+    try:
+        # Sử dụng hàm build_icb_hierarchy đã viết ở phần trước của file
+        _, get_chain = build_icb_hierarchy()
+        res_stocks = supabase.table('stocks').select("*").execute()
+        
+        results = []
+        for s in res_stocks.data:
+            icb_id = get_val(s, 'icb_level_id', 'ICB_Level_Id')
+            chain = get_chain(icb_id)
+            results.append({
+                "stock_code": get_val(s, 'stockcode', 'StockCode'),
+                "company_name": get_val(s, 'companyname', 'CompanyName'),
+                "exchange": get_val(s, 'exchange', 'Exchange'),
+                "l4": chain[4] or "N/A", 
+                "l3": chain[3] or "N/A", 
+                "l2": chain[2] or "N/A", 
+                "l1": chain[1] or "N/A"
+            })
+        
+        # Sắp xếp theo mã chứng khoán cho dễ nhìn
+        results.sort(key=lambda x: x['stock_code'] or "")
+        return jsonify(results), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

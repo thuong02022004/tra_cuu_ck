@@ -19,6 +19,9 @@
         .table-nowrap th, .table-nowrap td { white-space: nowrap; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* Hiệu ứng mượt cho thanh tiến trình */
+        .progress-transition { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex h-screen overflow-hidden">
@@ -26,18 +29,12 @@
     <aside class="w-64 bg-navy text-white flex flex-col shadow-lg hidden md:flex z-20">
         <div class="h-16 flex items-center justify-center border-b border-blue-800">
             <i class="fa-solid fa-chart-pie text-2xl mr-2"></i>
-            <h1 class="text-xl font-bold tracking-wider">ICB VIETNAM</h1>
+            <h1 class="text-xl font-bold tracking-wider uppercase">ICB VIETNAM</h1>
         </div>
         <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto font-medium text-sm">
-            <a href="index.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition">
-                <i class="fa-solid fa-house w-6"></i> Trang chủ
-            </a>
-            <a href="quan-ly-ck.html" class="flex items-center px-4 py-3 bg-blue-800 rounded-lg shadow-inner">
-                <i class="fa-solid fa-building w-6"></i> Quản lý công ty (Mã CK)
-            </a>
-            <a href="icb.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition">
-                <i class="fa-solid fa-layer-group w-6"></i> Quản lý danh mục ICB
-            </a>
+            <a href="index.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-house w-6"></i> Trang chủ</a>
+            <a href="quan-ly-ck.html" class="flex items-center px-4 py-3 bg-blue-800 rounded-lg shadow-inner"><i class="fa-solid fa-building w-6"></i> Quản lý công ty (Mã CK)</a>
+            <a href="icb.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-layer-group w-6"></i> Quản lý danh mục ICB</a>
         </nav>
     </aside>
 
@@ -109,25 +106,45 @@
                     </div>
                     <div id="pagination-controls" class="flex items-center gap-1"></div>
                     <div id="pagination-info" class="bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
-                        <span class="text-[11px] text-blue-600 font-bold uppercase">Đang tải dữ liệu...</span>
+                        <span class="text-[11px] text-blue-600 font-bold uppercase tracking-tight">Đang tải dữ liệu...</span>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <div id="modal-progress" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-[100] backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-10 text-center max-w-md w-full shadow-2xl border border-gray-100">
+            <div id="progress-icon-container" class="mb-6">
+                <i class="fa-solid fa-arrows-rotate fa-spin text-6xl text-blue-600"></i>
+            </div>
+            
+            <h3 id="progress-title" class="text-xl font-extrabold text-navy mb-2">Đang xử lý dữ liệu</h3>
+            <p id="progress-status-text" class="text-sm text-gray-500 mb-8 font-medium">Vui lòng chờ trong giây lát...</p>
+            
+            <div class="w-full bg-gray-100 rounded-full h-5 mb-4 overflow-hidden border p-1">
+                <div id="progress-bar-fill" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-full w-0 rounded-full progress-transition shadow-inner"></div>
+            </div>
+            
+            <div class="flex justify-between items-center px-1">
+                <span id="progress-percent" class="text-lg font-black text-blue-700 italic">0%</span>
+                <span class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Processing</span>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-form-company" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative">
-            <h2 id="modal-company-title" class="text-xl font-bold text-navy mb-6">Thêm Công Ty Mới</h2>
+            <h2 id="modal-company-title" class="text-xl font-bold text-navy mb-6 text-center uppercase tracking-wider underline underline-offset-8 decoration-blue-200">Thêm Công Ty Mới</h2>
             <form id="form-company" class="space-y-5">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mã CK</label>
-                        <input type="text" id="cp-code" required class="w-full uppercase border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none">
+                        <input type="text" id="cp-code" required class="w-full uppercase border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-navy outline-none shadow-sm transition-all focus:ring-1 focus:ring-navy">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Sàn</label>
-                        <select id="cp-exchange" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm outline-none bg-white shadow-sm">
+                        <select id="cp-exchange" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none bg-white shadow-sm">
                             <option value="HOSE">HOSE</option>
                             <option value="HNX">HNX</option>
                             <option value="UPCOM">UPCOM</option>
@@ -137,15 +154,15 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tên Công Ty</label>
-                    <input type="text" id="cp-name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none">
+                    <input type="text" id="cp-name" required class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-navy outline-none shadow-sm transition-all focus:ring-1 focus:ring-navy">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mã ICB Level 4</label>
-                    <input type="text" id="cp-icb-code" placeholder="Ví dụ: 8355" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none">
+                    <input type="text" id="cp-icb-code" placeholder="Ví dụ: 8355" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-navy outline-none shadow-sm transition-all focus:ring-1 focus:ring-navy">
                 </div>
-                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeCompanyModal()" class="px-5 py-2 text-gray-500 hover:bg-gray-100 rounded-lg transition font-medium">Hủy</button>
-                    <button type="submit" class="px-6 py-2 bg-navy text-white rounded-lg font-bold shadow-lg shadow-blue-200 hover:bg-blue-900 transition">Lưu thông tin</button>
+                <div class="flex justify-end gap-3 pt-6 border-t border-gray-100">
+                    <button type="button" onclick="closeCompanyModal()" class="px-6 py-2.5 text-gray-500 hover:bg-gray-100 rounded-xl transition font-bold uppercase text-xs tracking-widest border border-transparent">Hủy</button>
+                    <button type="submit" class="px-8 py-2.5 bg-navy text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-900 transition-all uppercase text-xs tracking-widest">Lưu thông tin</button>
                 </div>
             </form>
         </div>

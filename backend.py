@@ -384,6 +384,92 @@ def get_stocks_for_assign():
     except Exception as e:
         print(f"❌ Lỗi get_stocks_for_assign: {e}")
         return jsonify({"error": str(e)}), 500
+# 1. API: Gỡ bỏ một cổ phiếu khỏi nhóm (Xóa gán sai)
+@app.route('/api/remove-stock-from-group', methods=['DELETE'])
+def remove_stock_from_group():
+    err = check_db()
+    if err: return err
+    
+    data = request.get_json(force=True)
+    group_id = data.get('group_id')
+    stock_id = data.get('stock_id')
+
+    if not group_id or not stock_id:
+        return jsonify({"error": "Thiếu thông tin Nhóm hoặc Cổ phiếu để xóa"}), 400
+
+    try:
+        # Xóa dòng tương ứng trong bảng trung gian
+        res = supabase.table('stock_stockgroups') \
+            .delete() \
+            .eq('stockgroup_id', group_id) \
+            .eq('stock_id', stock_id) \
+            .execute()
+        
+        return jsonify({"message": "Đã gỡ cổ phiếu khỏi nhóm thành công!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# 2. API: Cập nhật thông tin gán (Ví dụ sửa ghi chú cho việc gán đó)
+@app.route('/api/update-stock-assign', methods=['PUT'])
+def update_stock_assign():
+    err = check_db()
+    if err: return err
+    
+    data = request.get_json(force=True)
+    group_id = data.get('group_id')
+    stock_id = data.get('stock_id')
+    new_note = data.get('note', '') # Thường dùng để sửa ghi chú lý do gán nhóm
+
+    try:
+        res = supabase.table('stock_stockgroups') \
+            .update({"note": new_note}) \
+            .eq('stockgroup_id', group_id) \
+            .eq('stock_id', stock_id) \
+            .execute()
+            
+        return jsonify({"message": "Cập nhật thông tin gán thành công!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/unassign-by-name', methods=['DELETE'])
+def unassign_by_name():
+    err = check_db()
+    if err: return err
+    
+    data = request.get_json(force=True)
+    stock_code = data.get('stock_code') # Ví dụ: 'VIC'
+    group_name = data.get('group_name') # Ví dụ: 'Nhóm Masan'
+
+    if not stock_code or not group_name:
+        return jsonify({"error": "Thiếu Tên Mã CK hoặc Tên Nhóm"}), 400
+
+    try:
+        # 1. Tìm ID của Cổ phiếu từ Tên (Mã CK)
+        res_s = supabase.table('stocks').select("id").eq('stockcode', stock_code.upper()).execute()
+        if not res_s.data:
+            return jsonify({"error": f"Không tìm thấy mã {stock_code}"}), 404
+        s_id = res_s.data[0]['id']
+
+        # 2. Tìm ID của Nhóm từ Tên Nhóm
+        res_g = supabase.table('stockgroups').select("id").eq('groupname', group_name).execute()
+        if not res_g.data:
+            return jsonify({"error": f"Không tìm thấy nhóm {group_name}"}), 404
+        g_id = res_g.data[0]['id']
+
+        # 3. Thực hiện xóa dòng kết nối trong bảng trung gian
+        supabase.table('stock_stockgroups') \
+            .delete() \
+            .eq('stockgroup_id', g_id) \
+            .eq('stock_id', s_id) \
+            .execute()
+            
+        return jsonify({
+            "message": f"Đã gỡ thành công mã {stock_code} khỏi nhóm {group_name}!"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

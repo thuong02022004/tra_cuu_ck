@@ -42,11 +42,11 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800">Nhóm Cổ Phiếu Định Nghĩa</h2>
-                    <p class="text-sm text-gray-500">Quản lý các danh mục đầu tư theo tiêu chí riêng</p>
+                    <p class="text-sm text-gray-500">Quản lý và gỡ mã gán nhầm trong danh mục</p>
                 </div>
                 <div class="flex gap-3">
                     <button onclick="openAssignStockModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold transition flex items-center shadow-lg shadow-emerald-100">
-                        <i class="fa-solid fa-list-check mr-2"></i> Chọn mã chứng khoán
+                        <i class="fa-solid fa-link mr-2"></i> Gán mã CK vào nhóm
                     </button>
                     <button onclick="openGroupModal()" class="bg-navy hover:bg-blue-900 text-white px-5 py-2.5 rounded-lg font-bold transition flex items-center shadow-lg shadow-blue-100">
                         <i class="fa-solid fa-plus-circle mr-2"></i> Tạo nhóm mới
@@ -61,25 +61,23 @@
                             <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-bold tracking-wider">
                                 <th class="px-6 py-4 border-b w-40">Mã Nhóm</th>
                                 <th class="px-6 py-4 border-b">Tên Nhóm</th>
-                                <th class="px-6 py-4 border-b">Mô tả chi tiết</th>
-                                <th class="px-6 py-4 border-b w-32 text-center">Thao tác</th>
+                                <th class="px-6 py-4 border-b">Mô tả</th>
+                                <th class="px-6 py-4 border-b w-48 text-center">Thao tác hệ thống</th>
                             </tr>
                         </thead>
                         <tbody id="group-table-body" class="text-sm text-gray-700 divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
-
                 <div class="px-6 py-4 bg-gray-50 flex items-center justify-between border-t border-gray-100">
                     <div class="flex items-center gap-2">
                         <span class="text-xs text-gray-500 font-medium">Hiển thị</span>
-                        <select id="rows-per-page" class="border border-gray-300 rounded px-2 py-1 text-xs outline-none focus:border-navy bg-white shadow-sm">
+                        <select id="rows-per-page" class="border border-gray-300 rounded px-2 py-1 text-xs outline-none bg-white shadow-sm">
                             <option value="10">10 dòng</option>
                             <option value="20">20 dòng</option>
-                            <option value="50">50 dòng</option>
                         </select>
                     </div>
                     <div id="pagination-controls"></div>
-                    <div id="pagination-info" class="text-xs text-gray-400 italic font-medium"></div>
+                    <div id="pagination-info" class="text-xs text-gray-400 italic"></div>
                 </div>
             </div>
         </main>
@@ -87,24 +85,24 @@
 
     <div id="modal-group" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative">
-            <h3 id="modal-title" class="text-xl font-bold text-navy mb-6">Thêm Nhóm Cổ Phiếu</h3>
+            <h3 id="modal-title" class="text-xl font-bold text-navy mb-6 text-center uppercase tracking-wider">Thông tin nhóm</h3>
             <form id="form-stock-group" class="space-y-4">
                 <input type="hidden" id="group-id">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mã Nhóm (Code)</label>
-                    <input type="text" id="group-code" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none font-mono uppercase" placeholder="VD: BLUECHIP">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mã Nhóm</label>
+                    <input type="text" id="group-code" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none uppercase font-mono">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tên Nhóm <span class="text-red-500">*</span></label>
-                    <input type="text" id="group-name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none" placeholder="VD: Nhóm cổ phiếu VN30">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tên Nhóm *</label>
+                    <input type="text" id="group-name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mô tả chi tiết</label>
-                    <textarea id="group-desc" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none" placeholder="Ghi chú về tiêu chí của nhóm..."></textarea>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mô tả</label>
+                    <textarea id="group-desc" rows="2" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none"></textarea>
                 </div>
                 <div class="flex justify-end gap-3 pt-4 border-t">
-                    <button type="button" onclick="closeGroupModal()" class="px-6 py-2 text-gray-500 font-medium hover:bg-gray-100 rounded-lg">Hủy</button>
-                    <button type="submit" class="px-6 py-2 bg-navy text-white rounded-lg font-bold hover:bg-blue-900 transition shadow-lg">Lưu dữ liệu</button>
+                    <button type="button" onclick="closeGroupModal()" class="px-6 py-2 text-gray-500 font-medium">Hủy</button>
+                    <button type="submit" class="px-6 py-2 bg-navy text-white rounded-lg font-bold shadow-lg shadow-blue-100">Lưu</button>
                 </div>
             </form>
         </div>
@@ -112,38 +110,53 @@
 
     <div id="modal-assign-stock" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60] backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative">
-            <h3 class="text-xl font-bold text-navy mb-4 flex items-center">
-                <i class="fa-solid fa-link mr-2"></i> Gán Cổ Phiếu Vào Nhóm
-            </h3>
-            
+            <h3 class="text-xl font-bold text-navy mb-4 flex items-center"><i class="fa-solid fa-link mr-2 text-emerald-500"></i> Gán Cổ Phiếu</h3>
             <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">1. Chọn nhóm mục tiêu</label>
-                    <select id="assign-group-id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none bg-gray-50"></select>
+                <select id="assign-group-id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm bg-gray-50"></select>
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                    <input type="text" id="search-stock-assign" onkeyup="filterStockList()" placeholder="Tìm mã..." class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm">
                 </div>
+                <div id="stock-list-container" class="h-60 overflow-y-auto border rounded-lg p-2 bg-gray-50 grid grid-cols-2 gap-1 content-start text-xs font-medium"></div>
+                <input type="text" id="assign-note" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm" placeholder="Ghi chú gán...">
+            </div>
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button type="button" onclick="closeAssignStockModal()" class="px-6 py-2 text-gray-500 font-medium">Đóng</button>
+                <button type="button" onclick="saveStockAssignment()" class="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold shadow-lg shadow-emerald-100">Xác nhận gán</button>
+            </div>
+        </div>
+    </div>
 
+    <div id="modal-view-members" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[70] backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">2. Chọn các mã cổ phiếu</label>
-                    <div class="relative mb-2">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-sm"></i>
-                        <input type="text" id="search-stock-assign" onkeyup="filterStockList()" placeholder="Tìm nhanh mã hoặc tên công ty..." class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-navy outline-none">
-                    </div>
-                    <div id="stock-list-container" class="h-60 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50 grid grid-cols-2 gap-1 content-start">
-                        <div class="col-span-2 text-center py-10 text-gray-400">Đang tải danh sách cổ phiếu...</div>
-                    </div>
+                    <h3 class="text-xl font-bold text-navy">Danh sách mã trong nhóm</h3>
+                    <p id="view-group-name" class="text-sm text-emerald-600 font-bold uppercase"></p>
                 </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ghi chú gán (Không bắt buộc)</label>
-                    <input type="text" id="assign-note" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none" placeholder="VD: Thêm vào danh mục theo dõi Q2/2026">
-                </div>
+                <button onclick="closeViewMembersModal()" class="text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="relative mb-4">
+                <i class="fa-solid fa-filter absolute left-3 top-2.5 text-gray-400"></i>
+                <input type="text" id="filter-members" onkeyup="filterMembersTable()" placeholder="Lọc nhanh mã đã gán..." class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:border-navy">
             </div>
 
-            <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
-                <button type="button" onclick="closeAssignStockModal()" class="px-6 py-2 text-gray-500 font-medium hover:bg-gray-100 rounded-lg">Đóng</button>
-                <button type="button" onclick="saveStockAssignment()" class="px-6 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 shadow-lg transition">
-                    Xác nhận gán mã
-                </button>
+            <div class="h-80 overflow-y-auto border rounded-xl bg-gray-50">
+                <table class="w-full text-left border-collapse">
+                    <thead class="sticky top-0 bg-gray-200 text-[10px] uppercase font-bold text-gray-600">
+                        <tr>
+                            <th class="px-4 py-2">Mã CK</th>
+                            <th class="px-4 py-2">Tên Công Ty</th>
+                            <th class="px-4 py-2 text-center w-24">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="members-table-body" class="text-xs divide-y">
+                        </tbody>
+                </table>
+            </div>
+            <div class="mt-6 text-right">
+                <button onclick="closeViewMembersModal()" class="px-8 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 transition">Đóng</button>
             </div>
         </div>
     </div>

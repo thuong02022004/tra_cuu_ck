@@ -52,6 +52,48 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ---------------------------------------------------------
+// CHỨC NĂNG MỚI: GỠ MÃ KHỎI NHÓM (DÀNH CHO TRƯỜNG HỢP GÁN NHẦM)
+// ---------------------------------------------------------
+
+/**
+ * Hàm xóa gán sai dựa trên Tên mã và Tên nhóm
+ * Dùng cho trường hợp: gán cho Masan nhưng lại đồng thời gán nhầm Vin thì xoá Vin đi
+ */
+async function unassignStockByName(stockCode, groupName) {
+    const confirmMsg = `Thượng có chắc chắn muốn gỡ mã [${stockCode}] khỏi nhóm [${groupName}] không?`;
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const res = await fetch(`${BASE_URL}/api/unassign-by-name`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                stock_code: stockCode,
+                group_name: groupName
+            })
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+            alert(result.message);
+            // Nếu Thượng đang xem danh sách tra cứu thì cập nhật lại bảng
+            if (typeof loadLookupData === 'function') {
+                loadLookupData(); 
+            } else {
+                // Hoặc load lại trang để cập nhật dữ liệu mới nhất
+                location.reload();
+            }
+        } else {
+            alert("Lỗi: " + (result.error || "Không thể gỡ mã"));
+        }
+    } catch (err) {
+        console.error("Lỗi gỡ mã:", err);
+        alert("Lỗi kết nối server khi gỡ mã!");
+    }
+}
+
+// ---------------------------------------------------------
 // LOGIC QUẢN LÝ DANH SÁCH NHÓM (GIỮ NGUYÊN)
 // ---------------------------------------------------------
 
@@ -82,8 +124,8 @@ function renderGroupRows(displayData) {
                 <td class="px-6 py-4 font-semibold text-gray-800">${g.GroupName}</td>
                 <td class="px-6 py-4 text-gray-500 italic text-xs">${g.Description || '-'}</td>
                 <td class="px-6 py-4 text-center whitespace-nowrap">
-                    <button onclick="editGroup(${g.Id})" class="text-blue-500 hover:bg-blue-100 p-2 rounded-lg"><i class="fa-solid fa-pen-to-square"></i></button>
-                    <button onclick="deleteGroup(${g.Id})" class="text-red-500 hover:bg-red-100 p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="editGroup(${g.Id})" class="text-blue-500 hover:bg-blue-100 p-2 rounded-lg" title="Sửa thông tin nhóm"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button onclick="deleteGroup(${g.Id})" class="text-red-500 hover:bg-red-100 p-2 rounded-lg" title="Xóa toàn bộ nhóm"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>`;
         tbody.insertAdjacentHTML('beforeend', row);
@@ -91,14 +133,14 @@ function renderGroupRows(displayData) {
 }
 
 // ---------------------------------------------------------
-// LOGIC GÁN MÃ CHỨNG KHOÁN (CẬP NHẬT LƯU TẠM & LỌC CHỮ ĐẦU)
+// LOGIC GÁN MÃ CHỨNG KHOÁN (LỌC CHỮ ĐẦU & LƯU TẠM)
 // ---------------------------------------------------------
 
 async function openAssignStockModal() {
     const groupSelect = document.getElementById('assign-group-id');
     groupSelect.innerHTML = allGroups.map(g => `<option value="${g.Id}">${g.GroupName}</option>`).join('');
 
-    // Reset lưu tạm khi mở modal
+    // Reset lưu tạm khi mở modal để tránh gán nhầm từ lần trước
     selectedStockIds.clear();
 
     if (allStocksForAssign.length === 0) {
@@ -108,12 +150,10 @@ async function openAssignStockModal() {
         } catch (err) { console.error("Lỗi tải cổ phiếu:", err); }
     }
 
-    // Mặc định lọc theo ký tự trống (hiện tất cả)
     renderStockCheckboxList(allStocksForAssign);
     document.getElementById('modal-assign-stock').classList.replace('hidden', 'flex');
 }
 
-// Hàm render kèm kiểm tra trạng thái đã tích chọn
 function renderStockCheckboxList(data) {
     const container = document.getElementById('stock-list-container');
     if (!container) return;
@@ -124,7 +164,6 @@ function renderStockCheckboxList(data) {
     }
 
     container.innerHTML = data.map(s => {
-        // Kiểm tra xem ID này có trong danh sách lưu tạm không
         const isChecked = selectedStockIds.has(s.id) ? 'checked' : '';
         return `
         <label class="flex items-center gap-2 p-2 hover:bg-white rounded border border-transparent hover:border-emerald-200 cursor-pointer transition shadow-sm">
@@ -139,7 +178,6 @@ function renderStockCheckboxList(data) {
     }).join('');
 }
 
-// Hàm lưu tạm ID khi người dùng click vào checkbox
 function handleTempSelect(checkbox) {
     const id = parseInt(checkbox.value);
     if (checkbox.checked) {
@@ -149,31 +187,22 @@ function handleTempSelect(checkbox) {
     }
 }
 
-// Tìm kiếm lọc theo KÝ TỰ ĐẦU TIÊN
 function filterStockList() {
     const term = document.getElementById('search-stock-assign').value.trim().toLowerCase();
-    
     let filtered = allStocksForAssign;
     if (term !== "") {
-        // Lọc các mã cổ phiếu bắt đầu bằng ký tự nhập vào
-        filtered = allStocksForAssign.filter(s => 
-            s.code.toLowerCase().startsWith(term)
-        );
+        filtered = allStocksForAssign.filter(s => s.code.toLowerCase().startsWith(term));
     }
-    
     renderStockCheckboxList(filtered);
 }
 
-// LƯU VÀO DATABASE (Chỉ khi bấm nút này mới gọi API)
 async function saveStockAssignment() {
     const groupId = document.getElementById('assign-group-id').value;
     const note = document.getElementById('assign-note').value.trim();
-    
-    // Chuyển Set lưu tạm thành mảng để gửi API
     const stockIds = Array.from(selectedStockIds);
 
     if (!groupId) { alert("Vui lòng chọn nhóm!"); return; }
-    if (stockIds.length === 0) { alert("Bạn chưa tích chọn mã nào!"); return; }
+    if (stockIds.length === 0) { alert("Thượng chưa tích chọn mã nào!"); return; }
 
     try {
         const res = await fetch(`${BASE_URL}/api/add-stocks-to-group`, {
@@ -190,6 +219,8 @@ async function saveStockAssignment() {
             const result = await res.json();
             alert(result.message);
             closeAssignStockModal();
+            // Nếu có trang tra cứu tổng hợp thì nên reload lại để cập nhật cột nhóm
+            if (window.location.pathname.includes('tra-cuu')) location.reload();
         } else {
             alert("Lỗi khi lưu gán mã!");
         }
@@ -197,13 +228,14 @@ async function saveStockAssignment() {
 }
 
 // ---------------------------------------------------------
-// CÁC HÀM PHỤ (GIỮ NGUYÊN)
+// CÁC HÀM PHỤ (MODAL & EDIT/DELETE NHÓM)
 // ---------------------------------------------------------
 
 function openGroupModal() {
     currentEditId = null;
     document.getElementById('modal-title').textContent = "Thêm Nhóm Cổ Phiếu";
-    document.getElementById('form-stock-group').reset();
+    const form = document.getElementById('form-stock-group');
+    if (form) form.reset();
     document.getElementById('modal-group').classList.replace('hidden', 'flex');
 }
 
@@ -231,7 +263,7 @@ async function editGroup(id) {
 }
 
 async function deleteGroup(id) {
-    if (!confirm("Thượng có chắc chắn muốn xóa nhóm này không?")) return;
+    if (!confirm("Thượng có chắc chắn muốn xóa TOÀN BỘ nhóm này không? (Các mã đã gán sẽ bị gỡ hết)")) return;
     try {
         const res = await fetch(`${BASE_URL}/api/delete-stock-group/${id}`, { method: 'DELETE' });
         if (res.ok) loadGroups();

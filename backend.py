@@ -89,7 +89,9 @@ def nhom_cong_ty():
 def tra_cuu(): 
     return render_template('tra-cuu.html')
 
-
+@app.route('/nhom-nghanh.html')
+def nhom_nghanh(): 
+    return render_template('nhom-nghanh.html')
 # =========================================================
 # 2. API: QUẢN LÝ NGÀNH (ICB LEVELS)
 # =========================================================

@@ -359,6 +359,31 @@ def api_stocks_hierarchy():
         return jsonify(results), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# API lấy danh sách cổ phiếu gọn nhẹ để hiển thị trong Modal chọn của trang Nhóm công ty
+@app.route('/api/get-stocks-for-assign', methods=['GET'])
+def get_stocks_for_assign():
+    err = check_db()
+    if err: return err
+    try:
+        # Chỉ lấy ID, Mã CK và Tên để tối ưu tốc độ load
+        res = supabase.table('stocks').select("id, stockcode, companyname").execute()
+        
+        # Format lại dữ liệu cho Frontend dễ đọc
+        results = []
+        for r in res.data:
+            results.append({
+                "id": get_val(r, 'id', 'Id'),
+                "code": get_val(r, 'stockcode', 'StockCode'),
+                "name": get_val(r, 'companyname', 'CompanyName')
+            })
+            
+        # Sắp xếp theo mã chứng khoán A-Z
+        results.sort(key=lambda x: x['code'] or "")
+        return jsonify(results), 200
+    except Exception as e:
+        print(f"❌ Lỗi get_stocks_for_assign: {e}")
+        return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

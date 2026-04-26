@@ -1,4 +1,5 @@
-const BASE_URL = 'http://127.0.0.1:5000';
+// SỬA TẠI ĐÂY: Để trống để tự động nhận diện domain hiện tại (Local hoặc Render)
+const BASE_URL = ''; 
 let currentEditId = null;
 let allGroups = [];
 let allStocksForAssign = []; 

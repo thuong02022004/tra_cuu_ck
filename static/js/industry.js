@@ -1,5 +1,6 @@
 let allData = [];
-const BASE_URL = 'http://127.0.0.1:5000';
+// SỬA TẠI ĐÂY: Để trống để tự động nhận diện domain hiện tại (Local hoặc Render)
+const BASE_URL = ''; 
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchInitialData();
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchInitialData() {
     try {
+        // Sử dụng BASE_URL tương đối để gọi API từ Render
         const res = await fetch(`${BASE_URL}/api/get-stocks-with-hierarchy`);
         allData = await res.json();
         initPagination(allData, renderIndustryRows);

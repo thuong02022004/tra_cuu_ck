@@ -1,4 +1,5 @@
-const BASE_URL = 'http://127.0.0.1:5000';
+// SỬA TẠI ĐÂY: Để trống để tự động nhận diện domain hiện tại (Local hoặc Render)
+const BASE_URL = ''; 
 let allLookupData = []; 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchInitialData() {
     try {
+        // Sử dụng BASE_URL tương đối để tương thích môi trường Production (Render)
         const res = await fetch(`${BASE_URL}/api/lookup-stocks`);
         allLookupData = await res.json();
         
@@ -120,7 +122,9 @@ function renderLookupRows(displayData) {
     });
 
     const info = document.getElementById('pagination-info');
-    if (info && paginationState) info.innerHTML = `Tìm thấy ${paginationState.allData.length} kết quả`;
+    if (info && typeof paginationState !== 'undefined') {
+        info.innerHTML = `Tìm thấy ${paginationState.allData.length} kết quả`;
+    }
 }
 
 function filterLookupTable() {

@@ -1,13 +1,21 @@
 let currentEditId = null;
-// SỬA TẠI ĐÂY: Sử dụng chuỗi rỗng để tự động nhận diện domain của Render
+let allCompaniesData = []; // Lưu trữ toàn bộ dữ liệu để tìm kiếm nhanh
 const BASE_URL = ''; 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Tải dữ liệu ban đầu và danh sách sàn vào dropdown lọc
+    // 1. Tải dữ liệu ban đầu
     loadCompanies();
     loadExchangesToDropdown();
 
-    // 2. Lắng nghe sự kiện click nút "Thêm công ty"
+    // 2. Lắng nghe sự kiện Tìm kiếm (Mã CK hoặc Tên công ty)
+    const searchInput = document.getElementById('search-company');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            executeSearch(this.value);
+        });
+    }
+
+    // 3. Lắng nghe sự kiện click nút "Thêm công ty"
     const btnOpenForm = document.getElementById('btn-open-form');
     if (btnOpenForm) {
         btnOpenForm.onclick = () => {
@@ -20,20 +28,21 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // 3. Lắng nghe sự kiện lọc theo Sàn
+    // 4. Lắng nghe sự kiện lọc theo Sàn
     const filterExchange = document.getElementById('filter-exchange');
     if (filterExchange) {
         filterExchange.addEventListener('change', function() {
             const selectedEx = this.value;
             if (selectedEx === 'all') {
-                loadCompanies(); // Load lại toàn bộ
+                initPagination(allCompaniesData, renderStockRows);
             } else {
-                filterStocksByExchange(selectedEx); // Lọc theo sàn cụ thể
+                const filtered = allCompaniesData.filter(item => item.exchange === selectedEx);
+                initPagination(filtered, renderStockRows);
             }
         });
     }
 
-    // 4. Xử lý Submit Form (Thêm & Sửa)
+    // 5. Xử lý Submit Form (Thêm & Sửa)
     document.getElementById('form-company')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = {
@@ -66,14 +75,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// --- HÀM TẢI DANH SÁCH SÀN DUY NHẤT TỪ DATABASE ---
+/**
+ * Hàm thực hiện tìm kiếm kết hợp
+ */
+function executeSearch(keyword) {
+    const term = keyword.toLowerCase().trim();
+    
+    // Lọc từ biến allCompaniesData
+    const filtered = allCompaniesData.filter(item => 
+        item.stock_code.toLowerCase().includes(term) || 
+        item.company_name.toLowerCase().includes(term)
+    );
+
+    // Cập nhật lại phân trang với kết quả tìm kiếm
+    if (typeof initPagination === "function") {
+        initPagination(filtered, renderStockRows);
+    }
+}
+
 async function loadExchangesToDropdown() {
     const select = document.getElementById('filter-exchange');
     if (!select) return;
     try {
         const res = await fetch(`${BASE_URL}/api/get-exchanges`);
         const exchanges = await res.json();
-        // Reset dropdown nhưng giữ option "Tất cả"
         select.innerHTML = '<option value="all">-- Tất cả các sàn --</option>';
         exchanges.forEach(ex => {
             if (ex) {
@@ -86,25 +111,13 @@ async function loadExchangesToDropdown() {
     } catch (err) { console.error("Lỗi tải danh sách sàn:", err); }
 }
 
-// --- HÀM LỌC CỔ PHIẾU THEO SÀN ---
-async function filterStocksByExchange(exchangeName) {
-    try {
-        const res = await fetch(`${BASE_URL}/api/stocks-by-exchange/${exchangeName}`);
-        const data = await res.json();
-        // Gửi dữ liệu lọc được qua bộ máy phân trang của main.js
-        if (typeof initPagination === "function") {
-            initPagination(data, renderStockRows);
-        }
-    } catch (err) { console.error("Lỗi lọc sàn:", err); }
-}
-
-// 5. Hàm hiển thị danh sách Stock (Tích hợp phân trang)
 async function loadCompanies() {
     try {
         const res = await fetch(`${BASE_URL}/api/get-stocks`);
-        const data = await res.json();
+        allCompaniesData = await res.json(); // Lưu dữ liệu vào biến tổng
+        
         if (typeof initPagination === "function") {
-            initPagination(data, renderStockRows);
+            initPagination(allCompaniesData, renderStockRows);
         }
     } catch (err) {
         console.error("Lỗi loadTable:", err);
@@ -113,15 +126,16 @@ async function loadCompanies() {
     }
 }
 
-// 6. Hàm render hàng (Được gọi bởi bộ máy phân trang)
 function renderStockRows(paginatedData) {
     const tbody = document.getElementById('company-table-body');
     if (!tbody) return;
     tbody.innerHTML = '';
+    
     if (paginatedData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Chưa có dữ liệu</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Không tìm thấy dữ liệu phù hợp</td></tr>';
         return;
     }
+
     paginatedData.forEach(item => {
         let badgeClass = 'bg-gray-100 text-gray-800';
         if (item.exchange === 'HOSE') badgeClass = 'bg-green-100 text-green-700';
@@ -148,12 +162,12 @@ function renderStockRows(paginatedData) {
             </tr>`;
         tbody.insertAdjacentHTML('beforeend', row);
     });
-    // Cập nhật thông tin số lượng
+
     const info = document.getElementById('pagination-info');
-    if (info) info.innerHTML = `<span class="text-xs text-gray-500 italic font-medium">Đang hiển thị dữ liệu lọc</span>`;
+    if (info) info.innerHTML = `<span class="text-xs text-gray-500 italic font-medium">Tìm thấy ${paginatedData.length} kết quả</span>`;
 }
 
-// 7. Các hàm CRUD & Import giữ nguyên logic của bạn
+// Các hàm CRUD & Import
 function closeCompanyModal() {
     const modal = document.getElementById('modal-form-company');
     if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }

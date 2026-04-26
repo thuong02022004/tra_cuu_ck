@@ -17,11 +17,12 @@
     <style>
         #file-import { display: none; }
         .progress-bar-fill { transition: width 0.4s ease-in-out; }
-        
-        /* Chống xuống dòng cho dữ liệu bảng */
-        .table-nowrap th, .table-nowrap td {
-            white-space: nowrap;
-        }
+        .table-nowrap th, .table-nowrap td { white-space: nowrap; }
+        /* Tùy chỉnh thanh cuộn cho mượt hơn */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex h-screen overflow-hidden">
@@ -31,10 +32,16 @@
             <i class="fa-solid fa-chart-pie text-2xl mr-2"></i>
             <h1 class="text-xl font-bold tracking-wider">ICB VIETNAM</h1>
         </div>
-        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            <a href="index.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-house w-6"></i> Trang chủ</a>
-            <a href="quan-ly-ck.html" class="flex items-center px-4 py-3 bg-blue-800 rounded-lg shadow-inner"><i class="fa-solid fa-building w-6"></i> Quản lý công ty (Mã CK)</a>
-            <a href="icb.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition"><i class="fa-solid fa-layer-group w-6"></i> Quản lý danh mục ICB</a>
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto font-medium text-sm">
+            <a href="index.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition">
+                <i class="fa-solid fa-house w-6"></i> Trang chủ
+            </a>
+            <a href="quan-ly-ck.html" class="flex items-center px-4 py-3 bg-blue-800 rounded-lg shadow-inner">
+                <i class="fa-solid fa-building w-6"></i> Quản lý công ty (Mã CK)
+            </a>
+            <a href="icb.html" class="flex items-center px-4 py-3 hover:bg-blue-800 rounded-lg transition">
+                <i class="fa-solid fa-layer-group w-6"></i> Quản lý danh mục ICB
+            </a>
         </nav>
     </aside>
 
@@ -43,38 +50,46 @@
             <div class="flex items-center text-gray-500 font-medium text-sm">
                 <span>Hệ thống</span> <i class="fa-solid fa-chevron-right text-[10px] mx-2"></i> <span class="text-navy font-bold">Quản lý Công ty</span>
             </div>
-            <div class="flex items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=Admin+User&background=1e3a8a&color=fff" class="w-8 h-8 rounded-full border">
-                <span class="text-sm font-semibold hidden md:block">Admin User</span>
+            <div class="flex items-center gap-3 border-l pl-4 border-gray-200">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=1e3a8a&color=fff" class="w-8 h-8 rounded-full border border-gray-200">
+                <span class="text-sm font-semibold hidden lg:block text-navy">Admin User</span>
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <main class="flex-1 overflow-y-auto p-4 md:p-6">
+            <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800">Danh sách Niêm yết</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Danh sách Niêm yết</h2>
                     <p class="text-xs text-gray-500">Quản lý mã chứng khoán và thông tin ngành cấp 4</p>
                 </div>
                 
-                <div class="flex gap-2 w-full md:w-auto">
-                    <input type="file" id="file-import" accept=".csv, .xlsx, .xls" onchange="handleImportCompany()">
-                    <button onclick="document.getElementById('file-import').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg font-medium transition flex items-center text-sm shadow-sm">
-                        <i class="fa-solid fa-file-excel mr-2"></i> Import Excel
-                    </button>
-                    <button id="btn-open-form" class="bg-navy hover:bg-blue-900 text-white px-4 py-2.5 rounded-lg font-medium transition flex items-center text-sm shadow-sm">
-                        <i class="fa-solid fa-plus mr-2"></i> Thêm công ty
-                    </button>
-                    <select id="filter-exchange" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-navy outline-none bg-white shadow-sm">
-                        <option value="all">-- Tất cả các sàn --</option>
-                    </select>
+                <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                    <div class="relative flex-1 md:flex-none md:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" id="search-company" placeholder="Tìm mã CK hoặc tên công ty..." 
+                               class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm outline-none focus:border-navy focus:ring-1 focus:ring-navy transition shadow-sm">
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="file" id="file-import" accept=".csv, .xlsx, .xls" onchange="handleImportCompany()">
+                        <button onclick="document.getElementById('file-import').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg font-medium transition flex items-center text-sm shadow-sm">
+                            <i class="fa-solid fa-file-excel mr-2"></i> Import
+                        </button>
+                        <button id="btn-open-form" class="bg-navy hover:bg-blue-900 text-white px-4 py-2.5 rounded-lg font-medium transition flex items-center text-sm shadow-sm whitespace-nowrap">
+                            <i class="fa-solid fa-plus mr-2"></i> Thêm mới
+                        </button>
+                        <select id="filter-exchange" class="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:border-navy outline-none bg-white shadow-sm font-medium">
+                            <option value="all">Tất cả sàn</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse table-nowrap">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-600 text-xs uppercase font-bold tracking-wider">
+                            <tr class="bg-gray-50 text-gray-500 text-[11px] uppercase font-bold tracking-widest">
                                 <th class="px-6 py-4 border-b w-20">ID</th>
                                 <th class="px-6 py-4 border-b">Mã CK</th>
                                 <th class="px-6 py-4 border-b">Tên Công ty</th>
@@ -88,74 +103,26 @@
                     </table>
                 </div>
 
-                <div class="px-6 py-4 bg-gray-50 flex items-center justify-between border-t border-gray-100">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-gray-500 font-medium">Hiển thị</span>
-                        <select id="rows-per-page" class="border border-gray-300 rounded px-2 py-1 text-xs outline-none focus:border-navy bg-white shadow-sm">
+                <div class="px-6 py-4 bg-gray-50 flex flex-col md:flex-row items-center justify-between border-t border-gray-200 gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Hiển thị</span>
+                        <select id="rows-per-page" class="border border-gray-300 rounded-md px-2 py-1.5 text-xs outline-none focus:border-navy bg-white shadow-sm font-semibold">
                             <option value="10">10 dòng</option>
                             <option value="20">20 dòng</option>
                             <option value="50">50 dòng</option>
                         </select>
                     </div>
                     
-                    <div id="pagination-controls"></div>
+                    <div id="pagination-controls" class="flex items-center gap-1"></div>
 
-                    <div id="pagination-info">
-                        <span class="text-xs text-gray-400 italic">Đang tải dữ liệu...</span>
+                    <div id="pagination-info" class="bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
+                        <span class="text-[11px] text-blue-600 font-bold uppercase">Đang tải dữ liệu...</span>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="modal-form-company" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 relative">
-            <h2 id="modal-company-title" class="text-xl font-bold text-navy mb-6">Thêm Công Ty Mới</h2>
-            <form id="form-company" class="space-y-5">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mã CK</label>
-                        <input type="text" id="cp-code" required class="w-full uppercase border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Sàn</label>
-                        <select id="cp-exchange" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm outline-none bg-white">
-                            <option value="HOSE">HOSE</option>
-                            <option value="HNX">HNX</option>
-                            <option value="UPCOM">UPCOM</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tên Công Ty</label>
-                    <input type="text" id="cp-name" required class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Mã ICB Level 4</label>
-                    <input type="text" id="cp-icb-code" placeholder="Ví dụ: 8355" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-navy outline-none">
-                </div>
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" onclick="closeCompanyModal()" class="px-5 py-2 text-gray-500 hover:bg-gray-100 rounded-lg transition">Hủy</button>
-                    <button type="submit" class="px-6 py-2 bg-navy text-white rounded-lg font-bold shadow-lg shadow-blue-200">Lưu thông tin</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="modal-progress" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[60] backdrop-blur-md">
-        <div class="bg-white rounded-2xl p-8 text-center max-w-sm w-full shadow-2xl">
-            <div id="progress-status-icon" class="mb-4">
-                <i class="fa-solid fa-circle-notch fa-spin text-5xl text-emerald-500"></i>
-            </div>
-            <h3 id="progress-title" class="text-lg font-bold mb-4">Đang xử lý dữ liệu...</h3>
-            <div class="w-full bg-gray-100 rounded-full h-3 mb-4 overflow-hidden border">
-                <div id="progress-bar" class="bg-emerald-500 h-full w-0 progress-bar-fill"></div>
-            </div>
-            <div id="progress-percent-text" class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">0%</div>
-            <button id="btn-close-progress" onclick="location.reload()" class="hidden w-full py-2 bg-navy text-white rounded-lg font-bold">Đóng & Tải lại</button>
-        </div>
-    </div>
-    
     <script src="/static/js/company.js"></script>
 </body>
 </html>

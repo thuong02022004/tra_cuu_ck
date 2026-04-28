@@ -1,13 +1,11 @@
 let currentEditId = null;
-let allCompaniesData = []; // Lưu trữ dữ liệu gốc để tìm kiếm & lọc
+let allCompaniesData = []; 
 const BASE_URL = ''; 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Tải dữ liệu ban đầu
     loadCompanies();
     loadExchangesToDropdown();
 
-    // 2. Sự kiện Tìm kiếm (Mã CK hoặc Tên công ty)
     const searchInput = document.getElementById('search-company');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
@@ -15,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Sự kiện mở Form THÊM MỚI
     const btnOpenForm = document.getElementById('btn-open-form');
     if (btnOpenForm) {
         btnOpenForm.addEventListener('click', () => {
@@ -26,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Sự kiện Lọc theo Sàn
     const filterExchange = document.getElementById('filter-exchange');
     if (filterExchange) {
         filterExchange.addEventListener('change', function() {
@@ -40,19 +36,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Xử lý SUBMIT FORM (Thêm & Sửa)
+    // --- XỬ LÝ SUBMIT FORM (Sửa & Thêm) ---
     const companyForm = document.getElementById('form-company');
     if (companyForm) {
         companyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Lấy dữ liệu từ các ô input
             const payload = {
                 stock_code: document.getElementById('cp-code').value.trim(),
                 company_name: document.getElementById('cp-name').value.trim(),
                 exchange: document.getElementById('cp-exchange').value,
                 icb_code: document.getElementById('cp-icb-code').value.trim()
             };
+
+            // Quyết định URL và Method dựa trên việc có đang EDIT hay không
             const method = currentEditId ? 'PUT' : 'POST';
-            const url = currentEditId ? `${BASE_URL}/api/update-stock/${currentEditId}` : `${BASE_URL}/api/add-stock`;
+            const url = currentEditId 
+                ? `${BASE_URL}/api/update-stock/${currentEditId}` 
+                : `${BASE_URL}/api/add-stock`;
 
             try {
                 const res = await fetch(url, {
@@ -60,20 +62,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
+                const result = await res.json();
+
                 if (res.ok) {
                     alert(currentEditId ? "Cập nhật thành công!" : "Thêm mới thành công!");
                     closeCompanyModal();
                     loadCompanies(); 
                 } else {
-                    const result = await res.json();
-                    alert("Lỗi: " + (result.error || "Không thể thao tác"));
+                    alert("Lỗi: " + (result.error || "Không thể thực hiện thao tác"));
                 }
             } catch (error) {
+                console.error("Fetch error:", error);
                 alert("Lỗi kết nối đến Server!");
             }
         });
     }
 });
+
+// --- HÀM LOAD DỮ LIỆU ĐỂ SỬA ---
+async function editCompany(id) {
+    currentEditId = id; // Gán ID hiện tại để biết là đang EDIT
+    try {
+        const res = await fetch(`${BASE_URL}/api/get-stock/${id}`);
+        if (!res.ok) throw new Error("Không thể lấy dữ liệu");
+        const stock = await res.json();
+        
+        // Hiển thị dữ liệu cũ lên Form
+        document.getElementById('modal-company-title').textContent = "Sửa Thông Tin Công Ty";
+        document.getElementById('cp-code').value = stock.stock_code || '';
+        document.getElementById('cp-name').value = stock.company_name || '';
+        document.getElementById('cp-exchange').value = stock.exchange || '';
+        document.getElementById('cp-icb-code').value = stock.icb_code || '';
+        
+        openCompanyModal();
+    } catch (e) {
+        alert("Không lấy được thông tin chi tiết!");
+    }
+}
+
 
 // --- HÀM XỬ LÝ IMPORT VỚI THANH TIẾN TRÌNH & BÁO LỖI ---
 async function handleImportCompany() {

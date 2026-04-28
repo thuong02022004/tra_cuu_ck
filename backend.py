@@ -238,6 +238,48 @@ def delete_stock(id):
     supabase.table('stocks').delete().eq('id', id).execute()
     return jsonify({"message": "Deleted"}), 200
 
+# --- API CẬP NHẬT THÔNG TIN CỔ PHIẾU (Dán vào phần 5 của file Python) ---
+@app.route('/api/update-stock/<int:id>', methods=['PUT'])
+def update_stock(id):
+    err = check_db()
+    if err: return err
+    
+    data = request.get_json(force=True)
+    update_fields = {}
+
+    # Map dữ liệu từ Frontend gửi về đúng tên cột Database của bạn
+    if 'stock_code' in data:
+        update_fields['stockcode'] = data['stock_code'].upper().strip()
+    if 'company_name' in data:
+        update_fields['companyname'] = data['company_name'].strip()
+    if 'exchange' in data:
+        update_fields['exchange'] = data['exchange'].strip()
+
+    # Xử lý cập nhật mã ngành ICB nếu có gửi icb_code
+    if 'icb_code' in data and data['icb_code']:
+        icb_code = str(data['icb_code']).strip().zfill(4)
+        res_icb = supabase.table('icb_levels').select("id").eq('icb_code', icb_code).execute()
+        if res_icb.data:
+            update_fields['icb_level_id'] = res_icb.data[0]['id']
+        else:
+            return jsonify({"error": f"Mã ICB {icb_code} không tồn tại trong hệ thống"}), 400
+
+    if not update_fields:
+        return jsonify({"error": "Không có dữ liệu thay đổi"}), 400
+
+    try:
+        # Thực hiện cập nhật vào bảng 'stocks' theo ID
+        res = supabase.table('stocks').update(update_fields).eq('id', id).execute()
+        
+        if res.data:
+            return jsonify({"message": "Cập nhật thành công!", "data": res.data}), 200
+        else:
+            return jsonify({"error": "Không tìm thấy cổ phiếu để cập nhật"}), 404
+            
+    except Exception as e:
+        print(f"❌ Lỗi Update: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
 # =========================================================
 # 6. API QUẢN LÝ NHÓM CÔNG TY (STOCK GROUPS)
 # =========================================================
